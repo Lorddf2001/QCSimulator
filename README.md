@@ -23,7 +23,7 @@ This project is designed for **clarity and learning**, not for speed or handling
 1. Make sure [GNU Octave](https://www.gnu.org/software/octave/) is installed.  
 2. Clone the repository:  
     ```bash
-    git clone https://github.com/your-username/QCSimulator-Octave.git
+    git clone https://github.com/Lorddf2001/QCSimulator-Octave.git
     ```  
 3. Open Octave in the project folder and run one of the example scripts.
 
