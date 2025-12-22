@@ -29,28 +29,41 @@ This project is designed for **clarity and learning**, not for speed or handling
 
 ## 💻 Usage Example
 
-```octave
-% Initialize a 3-qubit simulator
-numQubit = 3;
-sim = QCSimulator(numQubit);
+% 1. Initialize Simulator (3 Variable Qubits + 1 Ancilla)
+n = 4;
+sim = QCSimulator(n);
+psi_initial = zeros(2^n, 1);
+psi_initial(1) = 1; % Start at |0000>
 
-% Define a simple circuit
-circuit = {
-    {'X', 2},            % Flip the 2nd qubit
-    {'CCZ', [1, 2, 3]},  % Flip phase of |111>
-    {'X', 2}             % Flip it back
+% 2. Define a function for the Oracle (Marks state |101>)
+% x is the decimal representation of the input bits
+f = @(x) (x == 5); 
+
+% 3. Construct the Circuit
+instructions = {
+    % --- Single Qubit Gates ---
+    {'H', [1]},
+    {'H', [2]},
+    {'H', [3]},  % Create superposition
+    {'T', [1]},  % Apply a 45-degree phase shift
+    
+    % --- Double Qubit Gate (CNOT) ---
+    {'CNOT', [1, 2]},   % Entangle Qubit 1 and 2
+    
+    % --- Triple Qubit Gate (CCNOT/Toffoli) ---
+    {'CCNOT', [1, 2, 3]},   % Flip Q3 if Q1 and Q2 are |1>
+    
+    % --- Functional Oracle ---
+    % Marks the solution onto the Ancilla (Qubit 4)
+    {'ORACLE', f, [1, 2, 3], 4},
+    
+    % --- Triple Qubit Phase Gate ---
+    {'CCZ', [1, 2, 3]}                   % Flip phase if Q1, Q2, Q3 are |1>
 };
 
-% Initialize state |000>
-psi = zeros(2^numQubit, 1);
-psi(1) = 1;
+% 4. Run Simulation
+psi_final = sim.Simulate(psi_initial, instructions);
 
-% Execute the circuit
-final_psi = sim.Simulate(psi, circuit);
-sim.displayState(final_psi);
-
-% Measure
-[bits, ~] = sim.Measure(final_psi);
-found_dec = sim.bits2dec(bits(1:numQubit));
-disp(['Measured value (decimal): ', num2str(found_dec)]);
-
+% 5. Analyze Results
+disp('Final Quantum State:');
+sim.displayState(psi_final);

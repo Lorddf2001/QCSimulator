@@ -8,6 +8,10 @@ classdef QCSimulator
         X  = [0, 1; 1, 0];
         Y = [0, -1i; 1i, 0];
         Z = [1, 0; 0, -1];
+        S  = [1, 0; 0, 1i];
+        SDG = [1, 0; 0, -1i]; % S-Dagger (Inverse of S)
+        T  = [1, 0; 0, exp(1i * pi / 4)];
+        TDG = [1, 0; 0, exp(-1i * pi / 4)]; % T-Dagger (Inverse of T)
         P0 = [1, 0; 0, 0]; % Projector |0><0|
         P1 = [0, 0; 0, 1]; % Projector |1><1|
         Id = eye(2);
@@ -60,6 +64,11 @@ classdef QCSimulator
         % Build the N-qubit operator corresponding to a single-qubit gate
         % U = I ⊗ ... ⊗ G ⊗ ... ⊗ I
         function U = build_single_gate(obj, name, idx)
+            % Check if the gate exists in our Constant properties
+            if ~isprop(obj, name)
+                error('Simulator:UnknownGate', 'Gate "%s" is not defined in QCSimulator constants.', name);
+            endif
+
             G = obj.(name); % Dynamic access to Constant properties
             U = 1;
             for i = 1:obj.numQubits

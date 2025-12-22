@@ -5,9 +5,10 @@ psi_0 = zeros(2^(n), 1);
 psi_0(1) = 1;
 
 circuit = {
-
-    {'CCZ', [1, 2, 3]},   % Mark |000> (which is now |111> thanks to X), equivalent to 2
-
+    {'H', 1},  % Put Qubit 1 into (|0> + |1>)/sqrt(2)
+    {'H', 2},  % Put Qubit 2 into (|0> + |1>)/sqrt(2)
+    {'S', 1},  % Add a 90-degree phase to the |1> part of Qubit 1
+    {'T', 2}   % Add a 45-degree phase to the |1> part of Qubit 2
 };
 
 psi_final = sim.Simulate(psi_0, circuit);
