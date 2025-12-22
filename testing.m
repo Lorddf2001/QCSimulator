@@ -13,3 +13,21 @@ circuit = {
 
 psi_final = sim.Simulate(psi_0, circuit);
 sim.displayState(psi_final);
+
+% Test: Two T-gates should equal one S-gate
+circuit_T_squared = {
+    {'H', [1]}
+    {'T', [1]},
+    {'T', [1]}
+};
+
+circuit_S = {
+    {'H', [1]}
+    {'S', [1]}
+};
+
+psi_t2 = sim.Simulate(psi_0, circuit_T_squared);
+sim.displayState(psi_t2);
+
+psi_s = sim.Simulate(psi_0, circuit_S);
+sim.displayState(psi_s);
