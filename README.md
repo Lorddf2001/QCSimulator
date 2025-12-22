@@ -29,41 +29,52 @@ This project is designed for **clarity and learning**, not for speed or handling
 
 ## 💻 Usage Example
 
-% 1. Initialize Simulator (3 Variable Qubits + 1 Ancilla)
-n = 4;
-sim = QCSimulator(n);
-psi_initial = zeros(2^n, 1);
-psi_initial(1) = 1; % Start at |0000>
+```octave
+% ========================================
+% Example: Quantum Circuit Simulation
+% 3 Variable Qubits + 1 Ancilla
+% ========================================
 
-% 2. Define a function for the Oracle (Marks state |101>)
-% x is the decimal representation of the input bits
-f = @(x) (x == 5); 
+%% 1. Initialize Simulator
+n = 4;                       % Total qubits (3 variables + 1 ancilla)
+sim = QCSimulator(n);         % Create simulator instance
+psi_initial = zeros(2^n, 1);  % Start in |0000>
+psi_initial(1) = 1;
 
-% 3. Construct the Circuit
+%% 2. Define Oracle Function
+% Marks the state |101> (decimal 5) as the solution
+f = @(x) (x == 5);
+
+%% 3. Construct the Circuit
 instructions = {
     % --- Single Qubit Gates ---
-    {'H', [1]},
-    {'H', [2]},
-    {'H', [3]},  % Create superposition
-    {'T', [1]},  % Apply a 45-degree phase shift
-    
-    % --- Double Qubit Gate (CNOT) ---
-    {'CNOT', [1, 2]},   % Entangle Qubit 1 and 2
-    
-    % --- Triple Qubit Gate (CCNOT/Toffoli) ---
+    {'H', [1]},   % Put Q1 in superposition
+    {'H', [2]},   % Put Q2 in superposition
+    {'H', [3]},   % Put Q3 in superposition
+    {'T', [1]},   % Apply a 45-degree phase shift on Q1
+
+    % --- Two-Qubit Gate ---
+    {'CNOT', [1, 2]},   % Entangle Q1 and Q2
+
+    % --- Three-Qubit Gate (Toffoli) ---
     {'CCNOT', [1, 2, 3]},   % Flip Q3 if Q1 and Q2 are |1>
-    
+
     % --- Functional Oracle ---
-    % Marks the solution onto the Ancilla (Qubit 4)
+    % Marks the solution onto the Ancilla (Q4)
     {'ORACLE', f, [1, 2, 3], 4},
-    
+
     % --- Triple Qubit Phase Gate ---
-    {'CCZ', [1, 2, 3]}                   % Flip phase if Q1, Q2, Q3 are |1>
+    {'CCZ', [1, 2, 3]}    % Flip phase if Q1, Q2, Q3 are |1>
 };
 
-% 4. Run Simulation
+%% 4. Run the Simulation
 psi_final = sim.Simulate(psi_initial, instructions);
 
-% 5. Analyze Results
+%% 5. Analyze Results
 disp('Final Quantum State:');
 sim.displayState(psi_final);
+
+%% 6. (Optional) Measure Qubits
+[bits, ~] = sim.Measure(psi_final);
+found_dec = sim.bits2dec(bits(1:3));
+disp(['Measured value (decimal, variable qubits): ', num2str(found_dec)]);
