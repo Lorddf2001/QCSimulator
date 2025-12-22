@@ -1,4 +1,4 @@
-% DEutch-Jozsa
+% Deutch-Jozsa
 n = 2;
 sim = QCSimulator(n + 1); % 2 inputs + 1 ancilla
 

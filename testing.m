@@ -1,3 +1,4 @@
+%Script for testing new additions
 n = 3;
 sim = QCSimulator(n);
 

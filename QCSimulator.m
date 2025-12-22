@@ -255,6 +255,39 @@ classdef QCSimulator
           outcome_bits = obj.dec2bits(outcome_decimal);
         endfunction
 
+        function [collapsed_psi, outcome_bits] = CollapseMeasure(obj, psi, target_indices)
+          % 1. Calculate probabilities for every state in the vector
+          probs = abs(psi).^2;
+
+          % 2. Pick a random state based on the probability distribution
+          r = rand();
+          cumulative_prob = 0;
+          measured_idx = 1;
+          for i = 1:length(probs)
+              cumulative_prob = cumulative_prob + probs(i);
+              if r <= cumulative_prob
+                  measured_idx = i - 1; % Convert to 0-based decimal
+                  break;
+              end
+          end
+
+          % 3. Determine the bit values of the measured state for the target qubits
+          full_bits = obj.dec2bits(measured_idx);
+          outcome_bits = full_bits(target_indices);
+
+          % 4. Collapse: Zero out all states that don't match the measured outcome
+          collapsed_psi = zeros(size(psi));
+          for i = 0:(length(psi)-1)
+              current_bits = obj.dec2bits(i);
+              if all(current_bits(target_indices) == outcome_bits)
+                  collapsed_psi(i+1) = psi(i+1);
+              end
+          end
+
+          % 5. Re-normalize the vector
+          collapsed_psi = collapsed_psi / norm(collapsed_psi);
+        endfunction
+
         function displayState(obj, psi)
           dim = length(psi);
           for i = 1:dim
