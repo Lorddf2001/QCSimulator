@@ -57,6 +57,8 @@ else
     fprintf('\nTeleportation failed \n');
 end
 
+
+
 % With collapse measure
 % Alice measures her two qubits (1 and 2)
 [psi_bob_collapsed, alice_results] = sim.CollapseMeasure(psi_final, [1, 2]);
@@ -68,12 +70,17 @@ fprintf('Alice measured: %d%d\n', alice_results(1), alice_results(2));
 disp('Bob''s recovered state:');
 sim.displayState(psi_bob_collapsed);
 
-if norm(psi_message - psi_bob_collapsed([1 2])) < 1e-10
+% Find the indices that are NOT zero in the collapsed state
+nonzero_indices = find(abs(psi_bob_collapsed) > 1e-6);
+
+% These two indices represent Bob's |0> and |1> in the collapsed universe
+recovered_amplitudes = psi_bob_collapsed(nonzero_indices);
+
+if norm(psi_message - recovered_amplitudes) < 1e-10
     fprintf('\nTeleportation succeeded! \n');
 else
-    fprintf('\nTeleportation failed \n');
+    fprintf('\nTeleportation failed\n');
 end
-
 
 % ------------------------------------------------------------
 % COMMENT:

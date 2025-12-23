@@ -49,8 +49,14 @@ classdef QCSimulator
                     % Single Qubit Gate Logic
                     U = obj.build_single_gate(gateName, targets);
                 elseif length(targets) == 2
-                    % Two Qubit Gate Logic (e.g., CNOT)
-                    U = obj.build_2qubit_gate(gateName, targets(1), targets(2));
+                    if strcmp(gateName, 'CPHASE')
+                      % Extract k from the instruction: {'CPHASE', [control, target], k}
+                      k = inst{3};
+                      U = obj.build_2qubit_gate('CPHASE', targets(1), targets(2), k);
+                    else
+                      % Two Qubit Gate Logic (e.g., CNOT)
+                      U = obj.build_2qubit_gate(gateName, targets(1), targets(2));
+                    end
                 elseif length(targets) == 3
                     % CCNOT, CCZ
                     U = obj.build_3qubit_gate(gateName, targets(1), targets(2), targets(3));
@@ -80,18 +86,24 @@ classdef QCSimulator
             endfor
         endfunction
 
-        % Helper to build CNOT for ANY two qubits
-        function U = build_2qubit_gate(obj, name, q1, q2)
+
+
+        % Helper to build two qubit gates
+        function U = build_2qubit_gate(obj, name, q1, q2, k)
             U = zeros(2^obj.numQubits);
 
             % Controlled Gates: Target logic depends on name
             % General controlled gate construction
             % U = |0><0|_c ⊗ I + |1><1|_c ⊗ G_t
-            if strcmp(name, 'CNOT') || strcmp(name, 'CZ')
+            if strcmp(name, 'CNOT') || strcmp(name, 'CZ') || strcmp(name, 'CPHASE')
               if strcmp(name, 'CNOT')
                 targetGate = obj.X;
               elseif strcmp(name, 'CZ')
                 targetGate = obj.Z;
+              elseif strcmp(name, 'CPHASE')
+                % Rk rotation: exp(2*pi*i / 2^k)
+                % Note: k is passed as an extra argument for QFT
+                targetGate = [1, 0; 0, exp(2j * pi / (2^k))];
               endif;
 
                % Term 1: Control is |0>, Target is Identity
