@@ -59,10 +59,8 @@ function insts = generate_invqft_instructions(n)
 
     % 2. Reverse the QFT logic
     for i = n:-1:1
-        % Apply controlled rotations in reverse order with negative k
-        % Logic: Invert the phase by passing -k
+        % Apply controlled rotations in reverse order
         for j = n:-1:i+1
-            % We use a special flag or negative k to signal inverse phase
             insts{end+1} = {'INVCPHASE', [j, i], (j-i+1)};
         end
         % Apply Hadamard
