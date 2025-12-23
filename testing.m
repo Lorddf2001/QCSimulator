@@ -1,34 +1,73 @@
-%Script for testing new additions
+function testing()
+
 n = 3;
 sim = QCSimulator(n);
+initial_state_idx = 3; % Let's start with |2> (binary 010)
 
-psi_0 = zeros(2^(n), 1);
-psi_0(1) = 1;
+% Create initial state
+psi_start = zeros(2^n, 1);
+psi_start(initial_state_idx - 1) = 1;
 
-circuit = {
-    {'H', 1},  % Put Qubit 1 into (|0> + |1>)/sqrt(2)
-    {'H', 2},  % Put Qubit 2 into (|0> + |1>)/sqrt(2)
-    {'S', 1},  % Add a 90-degree phase to the |1> part of Qubit 1
-    {'T', 2}   % Add a 45-degree phase to the |1> part of Qubit 2
-};
+% 1. Forward QFT
+disp('Step 1: Applying QFT...');
+psi_freq = sim.Simulate(psi_start, generate_qft_instructions(n));
 
-psi_final = sim.Simulate(psi_0, circuit);
-sim.displayState(psi_final);
+% 2. Inverse QFT
+disp('Step 2: Applying IQFT...');
+psi_reconstructed = sim.Simulate(psi_freq, generate_invqft_instructions(n));
 
-% Test: Two T-gates should equal one S-gate
-circuit_T_squared = {
-    {'H', [1]}
-    {'T', [1]},
-    {'T', [1]}
-};
+% 3. Check Results
+disp('Reconstructed State:');
+sim.displayState(psi_reconstructed);
 
-circuit_S = {
-    {'H', [1]}
-    {'S', [1]}
-};
+diff = norm(psi_start - psi_reconstructed);
+if diff < 1e-10
+    fprintf('\nSUCCESS: IQFT(QFT(|%d>)) = |%d>\n', initial_state_idx, initial_state_idx);
+else
+    fprintf('\nFAILURE: State was not reconstructed. Diff: %e\n', diff);
+end
 
-psi_t2 = sim.Simulate(psi_0, circuit_T_squared);
-sim.displayState(psi_t2);
+endfunction
 
-psi_s = sim.Simulate(psi_0, circuit_S);
-sim.displayState(psi_s);
+function insts = generate_qft_instructions(n)
+    insts = {};
+    for i = 1:n
+        % Apply Hadamard to the current qubit
+        insts{end+1} = {'H', [i]};
+
+        % Apply controlled rotations for all qubits after it
+        k = 2;
+        for j = i+1:n
+            insts{end+1} = {'CPHASE', [j, i], k};
+            k = k + 1;
+        end
+    end
+
+    % Add SWAPs to reverse the order at the end
+    for i = 1:floor(n/2)
+        insts{end+1} = {'SWAP', [i, n-i+1]};
+    end
+endfunction
+
+function insts = generate_invqft_instructions(n)
+    insts = {};
+
+    % 1. Start with SWAPs (Inverse of the end of QFT)
+    for i = floor(n/2):-1:1
+        insts{end+1} = {'SWAP', [i, n-i+1]};
+    end
+
+    % 2. Reverse the QFT logic
+    for i = n:-1:1
+        % Apply controlled rotations in reverse order with negative k
+        % Logic: Invert the phase by passing -k
+        for j = n:-1:i+1
+            % We use a special flag or negative k to signal inverse phase
+            insts{end+1} = {'INVCPHASE', [j, i], (j-i+1)};
+        end
+        % Apply Hadamard
+        insts{end+1} = {'H', [i]};
+    end
+endfunction
+
+

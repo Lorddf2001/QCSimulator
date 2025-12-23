@@ -49,10 +49,10 @@ classdef QCSimulator
                     % Single Qubit Gate Logic
                     U = obj.build_single_gate(gateName, targets);
                 elseif length(targets) == 2
-                    if strcmp(gateName, 'CPHASE')
+                    if strcmp(gateName, 'CPHASE') || strcmp(gateName, 'INVCPHASE')
                       % Extract k from the instruction: {'CPHASE', [control, target], k}
                       k = inst{3};
-                      U = obj.build_2qubit_gate('CPHASE', targets(1), targets(2), k);
+                      U = obj.build_2qubit_gate(gateName, targets(1), targets(2), k);
                     else
                       % Two Qubit Gate Logic (e.g., CNOT)
                       U = obj.build_2qubit_gate(gateName, targets(1), targets(2));
@@ -95,7 +95,7 @@ classdef QCSimulator
             % Controlled Gates: Target logic depends on name
             % General controlled gate construction
             % U = |0><0|_c ⊗ I + |1><1|_c ⊗ G_t
-            if strcmp(name, 'CNOT') || strcmp(name, 'CZ') || strcmp(name, 'CPHASE')
+            if strcmp(name, 'CNOT') || strcmp(name, 'CZ') || strcmp(name, 'CPHASE') || strcmp(name, 'INVCPHASE')
               if strcmp(name, 'CNOT')
                 targetGate = obj.X;
               elseif strcmp(name, 'CZ')
@@ -104,6 +104,10 @@ classdef QCSimulator
                 % Rk rotation: exp(2*pi*i / 2^k)
                 % Note: k is passed as an extra argument for QFT
                 targetGate = [1, 0; 0, exp(2j * pi / (2^k))];
+              elseif strcmp(name, 'INVCPHASE')
+                % Rk rotation: exp(2*pi*i / 2^k)
+                % Note: k is passed as an extra argument for QFT
+                targetGate = [1, 0; 0, exp(-2j * pi / (2^k))];
               endif;
 
                % Term 1: Control is |0>, Target is Identity
