@@ -195,7 +195,7 @@ classdef QCSimulator
         % Oracle implements:
         % |x>|y> → |x>|y ⊕ f(x)>
         % Matrix is a permutation matrix (unitary, classical reversible)
-        function U = build_oracle(obj, f_handle, input_qubits, target_qubit)
+        function U = build_oracle(obj, f_handle, input_qubits, target_qubits)
           % f_handle: a function like @(x) mod(x, 2)
           % input_qubits: vector of indices, e.g., [1, 2]
           % target_qubit: scalar index, e.g., 3
@@ -213,21 +213,23 @@ classdef QCSimulator
               x_val = obj.bits2dec(x_bits);
 
               % 3. Calculate f(x)
-              fx = f_handle(x_val);
+              fx_val = f_handle(x_val);
 
-              % 4. Compute y XOR f(x)
-              y_bit = bits(target_qubit);
-              new_y_bit = mod(y_bit + fx, 2);
+              % 2. Convert f(x) to bits matching the size of target_qubits
+              fx_bits = dec2bin(fx_val, length(target_qubits)) - '0';
 
-              % 5. Create the new bit string and convert back to decimal
+             % 3. XOR each bit of f(x) into the corresponding target qubit
               new_bits = bits;
-              new_bits(target_qubit) = new_y_bit;
-              j = obj.bits2dec(new_bits);
+              for k = 1:length(target_qubits)
+                  t_idx = target_qubits(k);
+                  new_bits(t_idx) = mod(bits(t_idx) + fx_bits(k), 2);
+              end
 
-              % 6. Set the permutation in the matrix: |j><i|
+              j = obj.bits2dec(new_bits);
               U(j+1, i+1) = 1;
-          endfor
+          end
         endfunction
+
 
         % Helper methods for oracle
         % Converts decimal to a vector of bits [q1, q2, ..., qN]
