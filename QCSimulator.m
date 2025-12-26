@@ -216,7 +216,7 @@ classdef QCSimulator
               fx_val = f_handle(x_val);
 
               % 2. Convert f(x) to bits matching the size of target_qubits
-              fx_bits = dec2bin(fx_val, length(target_qubits)) - '0';
+              fx_bits = dec2bin(double(fx_val), length(target_qubits)) - '0';
 
              % 3. XOR each bit of f(x) into the corresponding target qubit
               new_bits = bits;
@@ -304,6 +304,24 @@ classdef QCSimulator
 
           % 5. Re-normalize the vector
           collapsed_psi = collapsed_psi / norm(collapsed_psi);
+        endfunction
+
+        function psi = ApplyNoise(obj, psi, p_error)
+            % p_error: probability of an error occurring on a qubit (e.g., 0.001)
+            for i = 1:obj.numQubits
+                r = rand();
+                if r < p_error
+                    % Apply a random error: X (bit-flip), Z (phase-flip), or Y (both)
+                    error_type = randi(3);
+                    if error_type == 1
+                        psi = obj.Simulate(psi, {{'X', i}});
+                    elseif error_type == 2
+                        psi = obj.Simulate(psi, {{'Z', i}});
+                    else
+                        psi = obj.Simulate(psi, {{'Y', i}});
+                    endif
+                endif
+            endfor
         endfunction
 
         function displayState(obj, psi)

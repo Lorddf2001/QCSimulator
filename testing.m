@@ -27,6 +27,10 @@ else
     fprintf('\nFAILURE: State was not reconstructed. Diff: %e\n', diff);
 end
 
+psi_noise = sim.ApplyNoise(psi_reconstructed, 0.1);
+sim.displayState(psi_noise);
+
+
 endfunction
 
 function insts = generate_qft_instructions(n)
